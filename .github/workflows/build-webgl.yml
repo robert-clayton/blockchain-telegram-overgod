@@ -3,6 +3,9 @@ name: Build WebGL and Deploy
 on:
   push:
     branches: [ master ]
+    paths:
+      - "OvergodIdle/**"
+      # - ".github/workflows/build-webgl.yml"
 
 env:
   PROJECT_PATH: OvergodIdle
