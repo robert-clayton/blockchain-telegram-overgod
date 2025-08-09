@@ -7,6 +7,9 @@ on:
       - "OvergodIdle/**"
       - ".github/workflows/build-webgl.yml"
 
+permissions:
+  contents: write
+
 env:
   PROJECT_PATH: OvergodIdle
   TARGET_PLATFORM: WebGL
