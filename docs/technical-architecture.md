@@ -15,6 +15,9 @@
 ### Backend (minimal-first)
 - Option A (initial): GitHub Pages static hosting + lightweight cloud worker
   - Cloudflare Workers / Firebase Functions for: leaderboards, signed stamps, telemetry intake
+- Option B (recommended for multiplayer/state): SpacetimeDB module + small bot/API service
+  - SpacetimeDB hosts tables and server logic (leaderboards, referrals, stamps)
+  - Telegram bot service handles commands (e.g., `/leaderboards`) and queries SpacetimeDB
 - Data model
   - Player: id (Telegram user id), profile, progression summary
   - Leaderboard: season, metric, rank
@@ -28,6 +31,9 @@
 ### Build & Deploy
 - GitHub Actions builds WebGL and deploys to `gh-pages`
 - Template selection: `OvergodTelegram`
+- Backend deployments:
+  - SpacetimeDB module (Maincloud/self-hosted)
+  - Bot service (Cloudflare Workers/Fly/Render)
 - Environment
   - Staging vs prod via build param and template flag; staging can enable test purchases
 

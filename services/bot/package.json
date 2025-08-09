@@ -1,0 +1,23 @@
+{
+  "name": "overgod-bot",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "hono": "^4.6.6",
+    "undici": "^6.19.8",
+    "@spacetimedb/typescript-sdk": "^0.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.4"
+  }
+}
+
+

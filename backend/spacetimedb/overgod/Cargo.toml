@@ -1,0 +1,16 @@
+[package]
+name = "overgod"
+version = "0.0.1"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[dependencies]
+# NOTE: Add SpacetimeDB crates once available in your environment, e.g.:
+# spacetimedb = "=VERSION"
+# spacetimedb-macros = "=VERSION"
+
+
