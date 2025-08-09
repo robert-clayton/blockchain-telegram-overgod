@@ -6,7 +6,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Unity WebGL Player | {{{ PRODUCT_NAME }}}</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico" />
-    <link rel="stylesheet" href="TemplateData/style.css" />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+      }
+      #unity-container {
+        width: 100vw;
+        height: 100vh;
+        position: relative;
+        overflow: hidden;
+      }
+      #unity-canvas {
+        width: 100vw;
+        height: 100vh;
+        display: block;
+      }
+      #unity-loading-bar, #unity-footer { display: none; }
+    </style>
     <script>
       (function () {
         function mapTelegramUser(u) {
@@ -100,17 +120,6 @@
   <body>
     <div id="unity-container" class="unity-desktop">
       <canvas id="unity-canvas"></canvas>
-      <div id="unity-loading-bar">
-        <div id="unity-logo"></div>
-        <div id="unity-progress-bar-empty">
-          <div id="unity-progress-bar-full"></div>
-        </div>
-      </div>
-      <div id="unity-footer">
-        <div id="unity-webgl-logo"></div>
-        <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">{{{ PRODUCT_NAME }}}</div>
-      </div>
     </div>
     <script>
       var buildUrl = "Build";
@@ -133,57 +142,39 @@
 
       var container = document.querySelector("#unity-container");
       var canvas = document.querySelector("#unity-canvas");
-      var loadingBar = document.querySelector("#unity-loading-bar");
-      var progressBarFull = document.querySelector("#unity-progress-bar-full");
-      var fullscreenButton = document.querySelector("#unity-fullscreen-button");
-      var width0 = "{{{ WIDTH }}}px";
-      var height0 = "{{{ HEIGHT }}}px";
-
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        container.className = "unity-mobile";
-        config.devicePixelRatio = 1;
-      } else {
-        canvas.style.width = "{{{ WIDTH }}}px";
-        canvas.style.height = "{{{ HEIGHT }}}px";
-      }
-      #if BACKGROUND_FILENAME
-      canvas.style.background = "url('" + buildUrl + "/{{{ BACKGROUND_FILENAME.replace(/'/g, '%27') }}}') center / cover";
-      #endif
-      loadingBar.style.display = "block";
-
-      document.addEventListener("fullscreenchange", function () {
-        var p = document.getElementById("unity-container");
-        var c = document.getElementById("unity-canvas");
-        if (document.fullscreenElement) {
-          width0 = c.style.width;
-          height0 = c.style.height;
-          setTimeout(function () {
-            c.style.width = getComputedStyle(p).width;
-            c.style.height = getComputedStyle(p).height;
-          }, 250);
-        } else {
-          c.style.width = width0;
-          c.style.height = height0;
+      // Fit to Telegram WebApp viewport if available
+      (function attachTelegramSizing(){
+        var tg = window.Telegram && window.Telegram.WebApp;
+        function applySize() {
+          if (tg) {
+            tg.expand();
+            // Use Telegram's reported viewport height to avoid scrollbars
+            var vh = tg.viewportHeight || window.innerHeight;
+            container.style.height = vh + 'px';
+            canvas.style.height = vh + 'px';
+            container.className = 'unity-mobile';
+            config.devicePixelRatio = 1;
+          } else {
+            container.style.height = window.innerHeight + 'px';
+            canvas.style.height = window.innerHeight + 'px';
+          }
+          container.style.width = '100vw';
+          canvas.style.width = '100vw';
         }
-      });
+        if (tg && tg.onEvent) {
+          tg.onEvent('viewportChanged', applySize);
+        }
+        window.addEventListener('resize', applySize);
+        applySize();
+      })();
 
       var script = document.createElement("script");
       script.src = loaderUrl;
       script.onload = function () {
-        createUnityInstance(canvas, config, function (progress) {
-          progressBarFull.style.width = 100 * progress + "%";
-        })
+        createUnityInstance(canvas, config, function (progress) {})
           .then(function (unityInstance) {
             window.unityInstance = unityInstance;
-            loadingBar.style.display = "none";
-            fullscreenButton.onclick = function () {
-              var p = document.getElementById("unity-container");
-              var c = document.getElementById("unity-canvas");
-              c.requestFullscreen = function () {
-                p.requestFullscreen();
-              };
-              unityInstance.SetFullscreen(1);
-            };
+            // No fullscreen button; Telegram manages chrome
           })
           .catch(function (message) {
             alert(message);
