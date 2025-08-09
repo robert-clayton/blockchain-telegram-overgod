@@ -77,7 +77,10 @@ namespace OvergodIdle.UI
 #if UNITY_WEBGL && !UNITY_EDITOR
             try
             {
+                var raw = TGMiniAppGameSDKProvider.getUserInfo();
+                Debug.Log($"[TelegramUserNameUI] getUserInfo raw JSON: {raw}");
                 var user = TGMiniAppGameSDKProvider.GetUserInfo();
+                Debug.Log($"[TelegramUserNameUI] parsed user => id:{user?.id} first:{user?.firstName} last:{user?.lastName} username:{user?.username}");
                 var display = BuildDisplayName(user);
                 uiText.text = string.IsNullOrEmpty(display) ? "Telegram user: <unknown>" : $"Telegram user: {display}";
             }
