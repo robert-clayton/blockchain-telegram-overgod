@@ -86,8 +86,32 @@ jobs:
           name: WebGLBuild
           path: build/WebGL
 
+      - name: Inspect downloaded build
+        run: |
+          echo "Listing build dir..."
+          ls -la build || true
+          echo "Listing build/WebGL..."
+          ls -la build/WebGL || true
+          echo "Recursive list..."
+          ls -R build | cat || true
+
+      - name: Detect publish directory
+        id: detect
+        shell: bash
+        run: |
+          set -e
+          INDEX_PATH=$(find build -type f -name index.html | head -n 1 || true)
+          if [ -z "$INDEX_PATH" ]; then
+            echo "No index.html found under build/." >&2
+            exit 1
+          fi
+          PUB_DIR=$(dirname "$INDEX_PATH")
+          echo "Found index.html at: $INDEX_PATH"
+          echo "Publish dir: $PUB_DIR"
+          echo "PUBLISH_DIR=$PUB_DIR" >> $GITHUB_ENV
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: build/WebGL
+          publish_dir: ${{ env.PUBLISH_DIR }}
