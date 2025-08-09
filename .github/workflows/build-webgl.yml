@@ -19,28 +19,14 @@ env:
 jobs:
   buildWebGL:
     name: Build WebGL
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest
+    runs-on: [self-hosted, Windows]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: true
           lfs: true
-
-      - name: Cache Unity Editor
-        if: env.CACHE_EDITOR == 'true'
-        uses: actions/cache@v4
-        with:
-          # Include common Linux locations used by GameCI/Unity for downloads & installs
-          path: |
-            ~/.local/share/unity3d
-            ~/.cache/unity3d
-            ~/.cache/unity
-            $HOME/.cache/unity
-          key: UnityEditor-${{ runner.os }}-${{ env.UNITY_VERSION }}-${{ env.TARGET_PLATFORM }}
-          restore-keys: |
-            UnityEditor-${{ runner.os }}-${{ env.UNITY_VERSION }}-
-            UnityEditor-${{ runner.os }}-
 
       - name: Cache Unity Library
         uses: actions/cache@v4
@@ -65,6 +51,7 @@ jobs:
           projectPath: ${{ env.PROJECT_PATH }}
           targetPlatform: ${{ env.TARGET_PLATFORM }}
           unityVersion: ${{ env.UNITY_VERSION }}
+          runAsHostUser: true # remove this when switching to ubuntu-latest
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
