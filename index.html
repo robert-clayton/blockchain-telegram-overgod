@@ -26,6 +26,22 @@
         display: block;
       }
       #unity-loading-bar, #unity-footer { display: none; }
+
+      #tg-fs-toggle {
+        position: fixed;
+        right: 12px;
+        bottom: 12px;
+        z-index: 10;
+        background: rgba(0,0,0,0.5);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-family: sans-serif;
+        font-size: 14px;
+        cursor: pointer;
+        user-select: none;
+      }
     </style>
     <script>
       (function () {
@@ -114,14 +130,25 @@
           requestReadTextFromClipboard: function () {},
           requestTGMethod: function () {},
         };
+        // If we’re running inside Telegram, ensure theme/init and viewport updates are propagated
+        try {
+          var tg = window.Telegram && window.Telegram.WebApp;
+          if (tg) {
+            tg.onEvent && tg.onEvent('themeChanged', function(){ /* no-op for now */ });
+            tg.onEvent && tg.onEvent('viewportChanged', function(){
+              if (window.unityInstance && window.unityInstance.SendMessage) {
+                window.unityInstance.SendMessage('TelegramUserNameUI', 'ForceRefreshFromJS', '');
+              }
+            });
+          }
+        } catch (e) {}
       })();
     </script>
     <script>
-      // Request Telegram fullscreen on first user interaction where supported
-      (function enableTelegramFullscreenOnTap(){
-        var invoked = false;
-        function tryRequestFullscreen(){
-          if (invoked) return; invoked = true;
+      // Fullscreen toggle button for Telegram Mini App
+      (function fullscreenToggle(){
+        var isFull = false;
+        function requestFS(){
           try {
             var tg = window.Telegram && window.Telegram.WebApp;
             if (tg && typeof tg.requestFullscreen === 'function') {
@@ -132,18 +159,48 @@
               var msg = JSON.stringify({ eventType: 'web_app_request_fullscreen', eventData: {} });
               window.parent.postMessage(msg, 'https://web.telegram.org');
             }
+            isFull = true;
           } catch (e) {}
-          document.removeEventListener('touchstart', tryRequestFullscreen, { passive: true });
-          document.removeEventListener('click', tryRequestFullscreen, false);
         }
-        document.addEventListener('touchstart', tryRequestFullscreen, { passive: true });
-        document.addEventListener('click', tryRequestFullscreen, false);
+        function exitFS(){
+          try {
+            var tg = window.Telegram && window.Telegram.WebApp;
+            if (tg && typeof tg.exitFullscreen === 'function') {
+              tg.exitFullscreen();
+            } else if (window.TelegramWebviewProxy && typeof window.TelegramWebviewProxy.postEvent === 'function') {
+              window.TelegramWebviewProxy.postEvent('web_app_exit_fullscreen', JSON.stringify({}));
+            } else if (window.parent && window.parent.postMessage) {
+              var msg = JSON.stringify({ eventType: 'web_app_exit_fullscreen', eventData: {} });
+              window.parent.postMessage(msg, 'https://web.telegram.org');
+            }
+            isFull = false;
+          } catch (e) {}
+        }
+        function updateButton(){
+          var btn = document.getElementById('tg-fs-toggle');
+          if (!btn) return;
+          btn.textContent = isFull ? 'Exit Fullscreen' : 'Go Fullscreen';
+        }
+        function toggle(){
+          if (isFull) exitFS(); else requestFS();
+          setTimeout(updateButton, 250);
+        }
+        // Listen to Telegram viewportChanged as a crude signal
+        try {
+          var tg = window.Telegram && window.Telegram.WebApp;
+          if (tg && tg.onEvent) {
+            tg.onEvent('viewportChanged', function(){ setTimeout(updateButton, 100); });
+          }
+        } catch (e) {}
+        window.__tgToggleFS = toggle;
+        document.addEventListener('DOMContentLoaded', updateButton);
       })();
     </script>
   </head>
   <body>
     <div id="unity-container" class="unity-desktop">
       <canvas id="unity-canvas"></canvas>
+      <div id="tg-fs-toggle" onclick="window.__tgToggleFS && window.__tgToggleFS()">Go Fullscreen</div>
     </div>
     <script>
       var buildUrl = "Build";
@@ -155,7 +212,7 @@
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
         productName: "Overgod Idle",
-        productVersion: "0.0.23",
+        productVersion: "0.0.24",
       };
 
       var container = document.querySelector("#unity-container");
