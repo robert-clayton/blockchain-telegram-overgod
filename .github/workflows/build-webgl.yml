@@ -20,6 +20,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: true
+          lfs: true
 
       - name: Cache Unity Editor
         if: env.CACHE_EDITOR == 'true'
@@ -68,7 +71,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: WebGLBuild
-          path: ${{ env.PROJECT_PATH }}/build/${{ env.TARGET_PLATFORM }}
+          path: build/${{ env.TARGET_PLATFORM }}
 
   deployToPages:
     needs: buildWebGL

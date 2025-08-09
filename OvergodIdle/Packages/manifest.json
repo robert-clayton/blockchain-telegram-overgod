@@ -1,4 +1,13 @@
 {
+  "scopedRegistries": [
+    {
+      "name": "OpenUPM",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "com.cysharp"
+      ]
+    }
+  ],
   "dependencies": {
     "com.unity.2d.animation": "11.0.0",
     "com.unity.2d.aseprite": "1.2.5",
@@ -48,6 +57,8 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0"
+    "com.unity.modules.xr": "1.0.0",
+    "com.openfort.sdk": "file:../Assets/_ThirdParty/Openfort/src/Packages/OpenfortSDK",
+    "yes.tma.bridge": "file:../Assets/_ThirdParty/Telegram-Unity-Bridge/packages/YesTMABridge"
   }
 }
