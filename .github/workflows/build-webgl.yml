@@ -20,7 +20,7 @@ jobs:
   buildWebGL:
     name: Build WebGL
     # runs-on: ubuntu-latest
-    runs-on: [self-hosted, Windows]
+    runs-on: [self-hosted, Linux]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
