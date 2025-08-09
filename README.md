@@ -67,7 +67,7 @@ git submodule update --init --recursive
      - Example (send via Bot API `sendMessage`):
        ```json
        {
-         "chat_id": "@your_channel",
+         "chat_id": "@forge",
          "text": "Play OvergodIdle now!",
          "reply_markup": {
            "inline_keyboard": [[

@@ -94,6 +94,12 @@ namespace OvergodIdle.UI
 #endif
         }
 
+        // Called from JS via unityInstance.SendMessage("TelegramUserNameUI", "ForceRefreshFromJS", "")
+        public void ForceRefreshFromJS(string _)
+        {
+            RefreshUserLabel();
+        }
+
 #if UNITY_WEBGL
         private static string BuildDisplayName(TMAUser user)
         {
