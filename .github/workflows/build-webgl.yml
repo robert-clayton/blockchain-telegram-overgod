@@ -8,20 +8,33 @@ env:
   PROJECT_PATH: OvergodIdle
   TARGET_PLATFORM: WebGL
   UNITY_VERSION: 6000.1.15f1
+  CACHE_EDITOR: "true"
 
 jobs:
   buildWebGL:
     name: Build WebGL
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      # Cache Library with keys that change when:
-      # - OS changes
-      # - Unity version changes
-      # - Target platform changes
-      # - Packages or Unity project version change
-      - uses: actions/cache@v4
+      - name: Cache Unity Editor
+        if: env.CACHE_EDITOR == 'true'
+        uses: actions/cache@v4
+        with:
+          # Include common Linux locations used by GameCI/Unity for downloads & installs
+          path: |
+            ~/.local/share/unity3d
+            ~/.cache/unity3d
+            ~/.cache/unity
+            $HOME/.cache/unity
+          key: UnityEditor-${{ runner.os }}-${{ env.UNITY_VERSION }}-${{ env.TARGET_PLATFORM }}
+          restore-keys: |
+            UnityEditor-${{ runner.os }}-${{ env.UNITY_VERSION }}-
+            UnityEditor-${{ runner.os }}-
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
         with:
           path: ${{ env.PROJECT_PATH }}/Library
           key: >
@@ -37,15 +50,17 @@ jobs:
             Library-${{ runner.os }}-${{ env.UNITY_VERSION }}-
             Library-${{ runner.os }}-
 
-      - uses: game-ci/unity-builder@v4
+      - name: Build (Unity Builder)
+        uses: game-ci/unity-builder@v4
         with:
-          targetPlatform: ${{ env.TARGET_PLATFORM }}
           projectPath: ${{ env.PROJECT_PATH }}
+          targetPlatform: ${{ env.TARGET_PLATFORM }}
           unityVersion: ${{ env.UNITY_VERSION }}
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload WebGL artifact
+        uses: actions/upload-artifact@v4
         with:
           name: WebGLBuild
           path: ${{ env.PROJECT_PATH }}/build/${{ env.TARGET_PLATFORM }}
@@ -54,7 +69,8 @@ jobs:
     needs: buildWebGL
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download artifact
+        uses: actions/download-artifact@v4
         with:
           name: WebGLBuild
           path: build/WebGL
