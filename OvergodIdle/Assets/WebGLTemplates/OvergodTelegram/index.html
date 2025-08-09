@@ -116,6 +116,30 @@
         };
       })();
     </script>
+    <script>
+      // Request Telegram fullscreen on first user interaction where supported
+      (function enableTelegramFullscreenOnTap(){
+        var invoked = false;
+        function tryRequestFullscreen(){
+          if (invoked) return; invoked = true;
+          try {
+            var tg = window.Telegram && window.Telegram.WebApp;
+            if (tg && typeof tg.requestFullscreen === 'function') {
+              tg.requestFullscreen();
+            } else if (window.TelegramWebviewProxy && typeof window.TelegramWebviewProxy.postEvent === 'function') {
+              window.TelegramWebviewProxy.postEvent('web_app_request_fullscreen', JSON.stringify({}));
+            } else if (window.parent && window.parent.postMessage) {
+              var msg = JSON.stringify({ eventType: 'web_app_request_fullscreen', eventData: {} });
+              window.parent.postMessage(msg, 'https://web.telegram.org');
+            }
+          } catch (e) {}
+          document.removeEventListener('touchstart', tryRequestFullscreen, { passive: true });
+          document.removeEventListener('click', tryRequestFullscreen, false);
+        }
+        document.addEventListener('touchstart', tryRequestFullscreen, { passive: true });
+        document.addEventListener('click', tryRequestFullscreen, false);
+      })();
+    </script>
   </head>
   <body>
     <div id="unity-container" class="unity-desktop">
