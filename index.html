@@ -1,127 +1,206 @@
 <!DOCTYPE html>
 <html lang="en-us">
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity Web Player | Overgod Idle</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <link rel="stylesheet" href="TemplateData/style.css">
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unity WebGL Player | Overgod Idle</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico" />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+      }
+      #unity-container {
+        width: 100vw;
+        height: 100vh;
+        position: relative;
+        overflow: hidden;
+      }
+      #unity-canvas {
+        width: 100vw;
+        height: 100vh;
+        display: block;
+      }
+      #unity-loading-bar, #unity-footer { display: none; }
+    </style>
+    <script>
+      (function () {
+        function mapTelegramUser(u) {
+          if (!u) return {};
+          return {
+            id: u.id || 0,
+            firstName: u.first_name || "",
+            lastName: u.last_name || "",
+            username: u.username || "",
+            isBot: !!u.is_bot,
+            isPremium: !!u.is_premium,
+            allowsWriteToPm: undefined,
+            addedToAttachmentMenu: undefined,
+            languageCode: u.language_code || "",
+            photoUrl: u.photo_url || "",
+          };
+        }
+
+        function getTelegramInitUser() {
+          try {
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
+              return mapTelegramUser(window.Telegram.WebApp.initDataUnsafe.user);
+            }
+          } catch (e) {}
+          return null;
+        }
+
+        // Dev fallback via query: ?dev_user={"id":1,"first_name":"Dev","last_name":"User","username":"dev"}
+        function getDevUser() {
+          try {
+            var params = new URLSearchParams(window.location.search);
+            var raw = params.get("dev_user");
+            if (raw) {
+              var parsed = JSON.parse(raw);
+              return mapTelegramUser(parsed);
+            }
+          } catch (e) {}
+          return { id: 0, firstName: "Dev", lastName: "User", username: "dev" };
+        }
+
+        var user = getTelegramInitUser() || getDevUser();
+        var initDataRaw = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || "";
+
+        // Minimal instance expected by YesTMABridge/index.jslib
+        window.TGMiniAppGameSDKInstance = {
+          launchParams: {
+            initData: { user: user },
+            initDataRaw: initDataRaw,
+            startParam: "",
+          },
+          wallet: {
+            isConnected: false,
+            address: "",
+            connect: function () {},
+            disconnect: function () {},
+          },
+          payments: {
+            ton: { pay: function (amount, comment) {} },
+          },
+          miniAppSetHeaderColor: function (color) {},
+          miniAppSetBgColor: function (color) {},
+          miniAppSetBottomBarColor: function (color) {},
+          miniAppClose: function () {},
+          miniAppIsActive: function () { return true; },
+          viewportExpand: function () {},
+          viewportRequestFullscreen: function () {},
+          backButtonShow: function () {},
+          backButtonHide: function () {},
+          enableConfirmation: function () {},
+          disableConfirmation: function () {},
+          enableVertical: function () {},
+          disableVertical: function () {},
+          shareStory: function () {},
+          openTelegramLink: function () {},
+          openLink: function () {},
+          shareURL: function () {},
+          requestVibration: function () {},
+          addToHomeScreen: function () {},
+          requestCheckHomeScreenStatus: function () {},
+          requestPhoneAccess: function () {},
+          requestWriteAccess: function () {},
+          requestContact: function () {},
+          requestEmojiStatusAccess: function () {},
+          requestSetEmojiStatus: function () {},
+          requestReadTextFromClipboard: function () {},
+          requestTGMethod: function () {},
+        };
+      })();
+    </script>
+    <script>
+      // Request Telegram fullscreen on first user interaction where supported
+      (function enableTelegramFullscreenOnTap(){
+        var invoked = false;
+        function tryRequestFullscreen(){
+          if (invoked) return; invoked = true;
+          try {
+            var tg = window.Telegram && window.Telegram.WebApp;
+            if (tg && typeof tg.requestFullscreen === 'function') {
+              tg.requestFullscreen();
+            } else if (window.TelegramWebviewProxy && typeof window.TelegramWebviewProxy.postEvent === 'function') {
+              window.TelegramWebviewProxy.postEvent('web_app_request_fullscreen', JSON.stringify({}));
+            } else if (window.parent && window.parent.postMessage) {
+              var msg = JSON.stringify({ eventType: 'web_app_request_fullscreen', eventData: {} });
+              window.parent.postMessage(msg, 'https://web.telegram.org');
+            }
+          } catch (e) {}
+          document.removeEventListener('touchstart', tryRequestFullscreen, { passive: true });
+          document.removeEventListener('click', tryRequestFullscreen, false);
+        }
+        document.addEventListener('touchstart', tryRequestFullscreen, { passive: true });
+        document.addEventListener('click', tryRequestFullscreen, false);
+      })();
+    </script>
   </head>
   <body>
     <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
-      <div id="unity-loading-bar">
-        <div id="unity-logo"></div>
-        <div id="unity-progress-bar-empty">
-          <div id="unity-progress-bar-full"></div>
-        </div>
-      </div>
-      <div id="unity-warning"> </div>
-      <div id="unity-footer">
-        <div id="unity-logo-title-footer"></div>
-        <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">Overgod Idle</div>
-      </div>
+      <canvas id="unity-canvas"></canvas>
     </div>
     <script>
-      var canvas = document.querySelector("#unity-canvas");
-
-      // Shows a temporary message banner/ribbon for a few seconds, or
-      // a permanent error message on top of the canvas if type=='error'.
-      // If type=='warning', a yellow highlight color is used.
-      // Modify or remove this function to customize the visually presented
-      // way that non-critical warnings and error messages are presented to the
-      // user.
-      function unityShowBanner(msg, type) {
-        var warningBanner = document.querySelector("#unity-warning");
-        function updateBannerVisibility() {
-          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-        }
-        var div = document.createElement('div');
-        div.innerHTML = msg;
-        warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
-        else {
-          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-          setTimeout(function() {
-            warningBanner.removeChild(div);
-            updateBannerVisibility();
-          }, 5000);
-        }
-        updateBannerVisibility();
-      }
-
       var buildUrl = "Build";
       var loaderUrl = buildUrl + "/WebGL.loader.js";
       var config = {
-        arguments: [],
         dataUrl: buildUrl + "/WebGL.data.unityweb",
         frameworkUrl: buildUrl + "/WebGL.framework.js.unityweb",
         codeUrl: buildUrl + "/WebGL.wasm.unityweb",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
         productName: "Overgod Idle",
-        productVersion: "0.0.22",
-        showBanner: unityShowBanner,
+        productVersion: "0.0.23",
       };
 
-      // By default, Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
-
-      // If you would like all file writes inside Unity Application.persistentDataPath
-      // directory to automatically persist so that the contents are remembered when
-      // the user revisits the site the next time, uncomment the following line:
-      // config.autoSyncPersistentDataPath = true;
-      // This autosyncing is currently not the default behavior to avoid regressing
-      // existing user projects that might rely on the earlier manual
-      // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
-      // expected to change.
-
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
-
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-        document.querySelector("#unity-container").className = "unity-mobile";
-        canvas.className = "unity-mobile";
-
-        // To lower canvas resolution on mobile devices to gain some
-        // performance, uncomment the following line:
-        // config.devicePixelRatio = 1;
-
-
-      } else {
-        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
-        canvas.style.width = "960px";
-        canvas.style.height = "600px";
-      }
-
-      document.querySelector("#unity-loading-bar").style.display = "block";
+      var container = document.querySelector("#unity-container");
+      var canvas = document.querySelector("#unity-canvas");
+      // Fit to Telegram WebApp viewport if available
+      (function attachTelegramSizing(){
+        var tg = window.Telegram && window.Telegram.WebApp;
+        function applySize() {
+          if (tg) {
+            tg.expand();
+            // Use Telegram's reported viewport height to avoid scrollbars
+            var vh = tg.viewportHeight || window.innerHeight;
+            container.style.height = vh + 'px';
+            canvas.style.height = vh + 'px';
+            container.className = 'unity-mobile';
+            config.devicePixelRatio = 1;
+          } else {
+            container.style.height = window.innerHeight + 'px';
+            canvas.style.height = window.innerHeight + 'px';
+          }
+          container.style.width = '100vw';
+          canvas.style.width = '100vw';
+        }
+        if (tg && tg.onEvent) {
+          tg.onEvent('viewportChanged', applySize);
+        }
+        window.addEventListener('resize', applySize);
+        applySize();
+      })();
 
       var script = document.createElement("script");
       script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
-              }).then((unityInstance) => {
-                document.querySelector("#unity-loading-bar").style.display = "none";
-                document.querySelector("#unity-fullscreen-button").onclick = () => {
-                  unityInstance.SetFullscreen(1);
-                };
-
-              }).catch((message) => {
-                alert(message);
-              });
-            };
-
+      script.onload = function () {
+        createUnityInstance(canvas, config, function (progress) {})
+          .then(function (unityInstance) {
+            window.unityInstance = unityInstance;
+            // No fullscreen button; Telegram manages chrome
+          })
+          .catch(function (message) {
+            alert(message);
+          });
+      };
       document.body.appendChild(script);
-
     </script>
   </body>
-</html>
+  </html>
+
+
