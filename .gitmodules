@@ -1,6 +1,0 @@
-[submodule "OvergodIdle/Assets/_ThirdParty/Telegram-Unity-Bridge"]
-	path = OvergodIdle/Assets/_ThirdParty/Telegram-Unity-Bridge
-	url = https://github.com/Open-Yescoin/Telegram-Unity-Bridge.git
-[submodule "OvergodIdle/Assets/_ThirdParty/Openfort"]
-	path = OvergodIdle/Assets/_ThirdParty/Openfort
-	url = https://github.com/openfort-xyz/openfort-csharp-unity
