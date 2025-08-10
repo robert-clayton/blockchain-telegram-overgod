@@ -1,15 +1,14 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
-#if UNITY_WEBGL
-using YesTMABridge;
-#endif
+using OvergodIdle.Telegram;
 
 namespace OvergodIdle.UI
 {
     /// <summary>
     /// Creates a simple Canvas/Text at runtime and displays the Telegram user's name
     /// when running as a WebGL Telegram MiniApp. In Editor/Standalone, shows a placeholder.
+    /// Note: Telegram integration is currently disabled due to removed dependencies.
     /// </summary>
     public sealed class TelegramUserNameUI : MonoBehaviour
     {
@@ -70,28 +69,19 @@ namespace OvergodIdle.UI
             textRect.offsetMax = new Vector2(-16, -12);
 
             RefreshUserLabel();
+            YesTMABridgeRunner.OnUserNameChanged += HandleUserNameChanged;
         }
 
         private void RefreshUserLabel()
         {
-#if UNITY_WEBGL && !UNITY_EDITOR
-            try
+            if (YesTMABridgeRunner.TryGetUserName(out var user))
             {
-                var raw = TGMiniAppGameSDKProvider.getUserInfo();
-                Debug.Log($"[TelegramUserNameUI] getUserInfo raw JSON: {raw}");
-                var user = TGMiniAppGameSDKProvider.GetUserInfo();
-                Debug.Log($"[TelegramUserNameUI] parsed user => id:{user?.id} first:{user?.firstName} last:{user?.lastName} username:{user?.username}");
-                var display = BuildDisplayName(user);
-                uiText.text = string.IsNullOrEmpty(display) ? "Telegram user: <unknown>" : $"Telegram user: {display}";
+                uiText.text = $"Telegram user: {user}";
             }
-            catch (Exception ex)
+            else
             {
-                Debug.LogWarning($"Failed to read Telegram user info: {ex.Message}");
-                uiText.text = "Telegram user: <unavailable>";
+                uiText.text = "Telegram user: <unknown>";
             }
-#else
-            uiText.text = "Telegram user: <Editor>";
-#endif
         }
 
         // Called from JS via unityInstance.SendMessage("TelegramUserNameUI", "ForceRefreshFromJS", "")
@@ -100,23 +90,15 @@ namespace OvergodIdle.UI
             RefreshUserLabel();
         }
 
-#if UNITY_WEBGL
-        private static string BuildDisplayName(TMAUser user)
+        private void HandleUserNameChanged(string newUserName)
         {
-            if (user == null)
-            {
-                return string.Empty;
-            }
-
-            // Prefer full name; fall back to username or id
-            var first = user.firstName ?? string.Empty;
-            var last = user.lastName ?? string.Empty;
-            var full = (first + " " + last).Trim();
-            if (!string.IsNullOrEmpty(full)) return full;
-            if (!string.IsNullOrEmpty(user.username)) return user.username;
-            return user.id != 0 ? user.id.ToString() : string.Empty;
+            uiText.text = $"Telegram user: {newUserName}";
         }
-#endif
+
+        private void OnDestroy()
+        {
+            YesTMABridgeRunner.OnUserNameChanged -= HandleUserNameChanged;
+        }
     }
 }
 

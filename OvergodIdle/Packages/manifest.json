@@ -26,6 +26,7 @@
     "com.unity.timeline": "1.8.7",
     "com.unity.ugui": "2.0.0",
     "com.unity.visualscripting": "1.9.7",
+    "yes.tma.bridge": "https://github.com/Open-Yescoin/Telegram-Unity-Bridge.git?path=/packages/YesTMABridge",
     "com.unity.modules.accessibility": "1.0.0",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
@@ -57,8 +58,6 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0",
-    "com.openfort.sdk": "file:../Assets/_ThirdParty/Openfort/src/Packages/OpenfortSDK",
-    "yes.tma.bridge": "file:../Assets/_ThirdParty/Telegram-Unity-Bridge/packages/YesTMABridge"
+    "com.unity.modules.xr": "1.0.0"
   }
 }

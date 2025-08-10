@@ -1,21 +1,5 @@
 {
   "dependencies": {
-    "com.cysharp.unitask": {
-      "version": "2.3.3",
-      "depth": 1,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://package.openupm.com"
-    },
-    "com.openfort.sdk": {
-      "version": "file:../Assets/_ThirdParty/Openfort/src/Packages/OpenfortSDK",
-      "depth": 0,
-      "source": "local",
-      "dependencies": {
-        "com.unity.nuget.newtonsoft-json": "3.2.0",
-        "com.cysharp.unitask": "2.3.3"
-      }
-    },
     "com.unity.2d.animation": {
       "version": "11.0.0",
       "depth": 0,
@@ -187,13 +171,6 @@
       "dependencies": {},
       "url": "https://packages.unity.com"
     },
-    "com.unity.nuget.newtonsoft-json": {
-      "version": "3.2.1",
-      "depth": 1,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://packages.unity.com"
-    },
     "com.unity.render-pipelines.core": {
       "version": "17.1.0",
       "depth": 1,
@@ -305,10 +282,11 @@
       "url": "https://packages.unity.com"
     },
     "yes.tma.bridge": {
-      "version": "file:../Assets/_ThirdParty/Telegram-Unity-Bridge/packages/YesTMABridge",
+      "version": "https://github.com/Open-Yescoin/Telegram-Unity-Bridge.git?path=/packages/YesTMABridge",
       "depth": 0,
-      "source": "local",
-      "dependencies": {}
+      "source": "git",
+      "dependencies": {},
+      "hash": "3bd86fca1c984f5ecb6e5d6a0eeb61681da9e724"
     },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",
