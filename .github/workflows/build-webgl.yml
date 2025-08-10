@@ -65,38 +65,55 @@ jobs:
     needs: buildWebGL
     runs-on: ubuntu-latest
     steps:
-      - name: Download artifact
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Unity WebGL artifact
         uses: actions/download-artifact@v4
         with:
           name: WebGLBuild
           path: build/WebGL
 
-      - name: Inspect downloaded build
-        run: |
-          echo "Listing build dir..."
-          ls -la build || true
-          echo "Listing build/WebGL..."
-          ls -la build/WebGL || true
-          echo "Recursive list..."
-          ls -R build | cat || true
-
-      - name: Detect publish directory
-        id: detect
+      - name: Prepare Unity files into Vite public/
         shell: bash
         run: |
           set -e
-          INDEX_PATH=$(find build -type f -name index.html | head -n 1 || true)
-          if [ -z "$INDEX_PATH" ]; then
-            echo "No index.html found under build/." >&2
-            exit 1
+          VITE_ROOT=OvergodIdle/Assets/WebGLTemplates/OvergodIdle
+          mkdir -p "$VITE_ROOT/public"
+          if [ -d build/WebGL/Build ]; then
+            rm -rf "$VITE_ROOT/public/Build"
+            cp -R build/WebGL/Build "$VITE_ROOT/public/"
           fi
-          PUB_DIR=$(dirname "$INDEX_PATH")
-          echo "Found index.html at: $INDEX_PATH"
-          echo "Publish dir: $PUB_DIR"
-          echo "PUBLISH_DIR=$PUB_DIR" >> $GITHUB_ENV
+          if [ -d build/WebGL/StreamingAssets ]; then
+            rm -rf "$VITE_ROOT/public/StreamingAssets"
+            cp -R build/WebGL/StreamingAssets "$VITE_ROOT/public/"
+          fi
+          if [ -d build/WebGL/TemplateData ]; then
+            rm -rf "$VITE_ROOT/public/TemplateData"
+            cp -R build/WebGL/TemplateData "$VITE_ROOT/public/"
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: OvergodIdle/Assets/WebGLTemplates/OvergodIdle/package.json
+
+      - name: Install dependencies (Vite template)
+        working-directory: OvergodIdle/Assets/WebGLTemplates/OvergodIdle
+        run: npm install
+
+      - name: Build Vite template
+        working-directory: OvergodIdle/Assets/WebGLTemplates/OvergodIdle
+        run: npm run build
+
+      - name: SPA fallback (copy index.html to 404.html)
+        working-directory: OvergodIdle/Assets/WebGLTemplates/OvergodIdle
+        run: cp dist/index.html dist/404.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ${{ env.PUBLISH_DIR }}
+          publish_dir: OvergodIdle/Assets/WebGLTemplates/OvergodIdle/dist

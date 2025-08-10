@@ -10,16 +10,16 @@ declare global {
 }
 
 window.TGMiniAppGameSDKInstance = new TGMiniAppGameClientSDK({
-  projectId: 'yescoin',
+  projectId: 'overgod-idle',
   ui: {
-    manifestUrl: 'https://www.yescoin.gold/tonconnect-manifest.json',
+    manifestUrl: new URL('./tonconnect-manifest.json', window.location.href).toString(),
     actionsConfiguration: {
-      twaReturnUrl: 'https://t.me/theYescoin_bot/Yescoin',
+      twaReturnUrl: 'https://t.me/OvergodIdle_bot',
     },
   },
 });
 
-const BASE_URL = 'https://pub-3f24abf8d919470d84a07be174835a7e.r2.dev/telegram-unity-bridge';
+const BASE_URL = (import.meta as any).env?.VITE_UNITY_BASE_URL ?? '.';
 
 const App = () => {
   const { unityProvider, loadingProgression, isLoaded } = useUnityContext({
@@ -27,8 +27,8 @@ const App = () => {
     dataUrl: `${BASE_URL}/Build/dist.data`,
     frameworkUrl: `${BASE_URL}/Build/dist.framework.js`,
     codeUrl: `${BASE_URL}/Build/dist.wasm`,
-    companyName: 'Yescoin - Unity Game Template',
-    productName: 'Yescoin',
+    companyName: '',
+    productName: 'Overgod Idle',
     productVersion: '0.1',
   });
 
