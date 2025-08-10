@@ -12,7 +12,7 @@
     "format": "prettier --write \"src/**/*.@(ts|tsx|)\""
   },
   "dependencies": {
-    "@open-yes/game-client-sdk": "workspace:*",
+    "@open-yes/game-client-sdk": "file:../../_ThirdParty/game-client-sdk",
     "@tsparticles/all": "^3.7.1",
     "@tsparticles/engine": "^3.7.1",
     "@tsparticles/react": "^3.0.0",
