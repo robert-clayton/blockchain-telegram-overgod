@@ -100,9 +100,20 @@ jobs:
           cache: 'npm'
           cache-dependency-path: OvergodIdle/Assets/WebGLTemplates/OvergodIdle/package.json
 
+      - uses: actions/cache@v4
+        with:
+          path: OvergodIdle/Assets/_ThirdParty/game-client-sdk/node_modules
+          key: sdk-npm-${{ hashFiles('OvergodIdle/Assets/_ThirdParty/game-client-sdk/package-lock.json') }}
+
+      - name: Install SDK deps and build
+        working-directory: OvergodIdle/Assets/_ThirdParty/game-client-sdk
+        run: |
+          npm ci
+          npm run build
+
       - name: Install dependencies (Vite template)
         working-directory: OvergodIdle/Assets/WebGLTemplates/OvergodIdle
-        run: npm install
+        run: npm ci --ignore-scripts
 
       - name: Build Vite template
         working-directory: OvergodIdle/Assets/WebGLTemplates/OvergodIdle
